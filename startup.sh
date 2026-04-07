@@ -9,3 +9,4 @@ IP=`get_property ./server-settings.ini connectip`
 PORT=`get_property ./server-settings.ini connectPort`
 
 printf "$NAME\n$PASSWORD\n$IP\n$PORT" | cloneheroserver
+exit 0
