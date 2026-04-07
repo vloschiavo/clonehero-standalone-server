@@ -1,0 +1,12 @@
+# Git
+.git/
+
+# Operating System & IDE specific files (common additions)
+.DS_Store
+Thumbs.db
+
+# Environment/local configuration files
+.env
+
+# Workflow/Tool specific directories (based on listing)
+.continue/
