@@ -36,13 +36,13 @@ services:
 
       # Use these two variables to spin up one or more servers.  You'll need to change the ports section below to match
       # Specify max server instance count
-      - CH_INSTANCE_COUNT=10
+      - CH_INSTANCE_COUNT=1
       # Specify multi server port range
-      - CH_PORTRANGE=14242-14251
+      # - CH_PORTRANGE=14242-14251
     
     ports:
-      # - "14242:14242/udp"
-      - "14242-14250:14242-14251/udp" 
+      - "14242:14242/udp"
+      # - "14242-14251:14242-14251/udp" 
     
     # Optional: Give the container a bit more resources if you expect many players or are launching multiple instances
     deploy:
