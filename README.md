@@ -79,10 +79,8 @@ redis_hostname = localhost
 docker compose up -d
 ```
 ---
-The Docker image exposes port 14242 for network communication by default. This and other settings can be configured in the docker-compose.yml.  The current server version includes the ability to spawn multiple Clone Hero servers (on different ports) on the same host with the single server executable.
 
-`settings.ini` is stored in `/usr/src/clonehero/` inside the container. So if you want to modify it, create a `settings.ini` file.
-
+The current server version includes the ability to spawn multiple Clone Hero servers (on different ports) on the same host with the single server executable.
 
 Get Clone Hero clients here: https://clonehero.net/
 Github release here: https://github.com/clonehero-game/releases
