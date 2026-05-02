@@ -4,19 +4,47 @@ services:
       context: .
       tags:
         - clonehero-standalone-server:latest
-        - clonehero-standalone-server:1.0.0.4080
+        - clonehero-standalone-server:1.1.0.6085
     image: vloschiavo/clonehero-standalone-server
     container_name: clone-hero-server
     restart: unless-stopped
     user: "1000:1000"
+
+    # Server Options
+    environment:
+      # Specify server name
+      - CH_NAME=My Clone Hero Server
+      
+      # Specify single server port
+      - CH_PORT=14242
+
+      # Specify server binding address
+      - CH_ADDRESS=0.0.0.0
+
+      # Set max logging level. default 4, range: 0-4
+      - CH_LOG_LEVEL=4
+
+      # Specify server password or leave CH_PASSWORD= blank and set CH_NO_PASS=true
+      # - CH_PASSWORD=
+      - CH_NO_PASS=true
+      
+      # When the server becomes empty, game values are set to default
+      - CH_ALLOW_RESET=true
+
+      # Skip address and port setup and startup a server with default settings
+      - CH_USE_DEFAULTS=false
+
+      # Use these two variables to spin up one or more servers.  You'll need to change the ports section below to match
+      # Specify max server instance count
+      - CH_INSTANCE_COUNT=10
+      # Specify multi server port range
+      - CH_PORTRANGE=14242-14251
     
     ports:
-      - "14242:14242/udp"
+      # - "14242:14242/udp"
+      - "14242-14250:14242-14251/udp" 
     
-    volumes:
-      - ./server-settings.ini:/usr/src/clonehero/config/server-settings.ini
-
-    # Optional: Give the container a bit more resources if you expect many players
+    # Optional: Give the container a bit more resources if you expect many players or are launching multiple instances
     deploy:
       resources:
         limits:

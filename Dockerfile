@@ -1,46 +1,48 @@
 FROM debian:bookworm-slim AS build-env
+
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /clonehero
+
 RUN apt-get update \
- && apt-get install --no-install-recommends -y ca-certificates wget unzip curl jq libicu72 \
- && rm -rf /var/lib/apt/lists/* \
- && mkdir config
+ && apt-get install --no-install-recommends -y ca-certificates wget unzip \
+ && rm -rf /var/lib/apt/lists/*
 
-ARG BRANCH=test
-ARG VERSION
+ARG VERSION=1.1.0.6085-final
 
-COPY ./startup.sh .
-COPY ./server-settings.ini ./config/
-
-RUN if [ -z ${VERSION+x} ]; then VERSION=$(curl -s "https://dl$BRANCH.b-cdn.net/linux-index.json" | jq -r .[0].version | sed "s/v0/v/"); fi \
- && wget -qO chserver.zip https://github.com/clonehero-game/releases/releases/download/V1.0.0.4080/CloneHero-standalone_server.zip \
+RUN wget -qO chserver.zip "https://github.com/clonehero-game/releases/releases/download/v${VERSION}/CloneHero-StandaloneServer.zip" \
  && unzip chserver.zip \
- && rm ./chserver.zip \
- && mv ./ChStandaloneServer-* ./chserver \
- && mv ./chserver/linux-x64 ./chserver/linux-x86_64 \
- && mv ./chserver/linux-arm64 ./chserver/linux-aarch64 \
- && mv ./chserver/linux-arm ./chserver/linux-armv7l \
- && mv ./chserver/linux-$(arch)/* . \
+ && rm chserver.zip \
+ && mv CloneHero-StandaloneServer chserver \
+ # Normalize arch folder names to match `arch` command output
+ && mv ./chserver/linux-x64   ./chserver/linux-x86_64  2>/dev/null || true \
+ && mv ./chserver/linux-arm64 ./chserver/linux-aarch64 2>/dev/null || true \
+ && mv ./chserver/linux-arm   ./chserver/linux-armv7l  2>/dev/null || true \
+ # Extract only the binary for the current architecture
+ && cp ./chserver/linux-$(arch)/Server . \
  && rm -rf ./chserver \
- && chmod +x ./Server \
- && chown -R 1000 ./config
+ && chmod +x ./Server
 
+COPY startup.sh .
+
+RUN chown -R 1000:1000 /clonehero
+
+# --- Runtime image ---
 FROM debian:bookworm-slim
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update \
- && apt-get install --no-install-recommends -y ca-certificates gnupg \
- && echo "deb http://security.debian.org/debian-security bullseye-security main" > /etc/apt/sources.list.d/bullseye-security.list && \
- apt-get update && \
-apt-get install --no-install-recommends -y libicu72 libgssapi-krb5-2 libssl1.1 && \
-rm -rf /var/lib/apt/lists/* && \
-ln -sf /usr/src/clonehero/Server /usr/bin/cloneheroserver && \
-useradd -m clonehero
+ && apt-get install --no-install-recommends -y \
+      libicu72 \
+      libgssapi-krb5-2 \
+      libssl3 \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd -m -u 1000 clonehero \
+ && mkdir /usr/src/clonehero && chown clonehero:clonehero /usr/src/clonehero
 
 WORKDIR /usr/src/clonehero
-COPY --from=build-env /clonehero .
+COPY --from=build-env --chown=clonehero:clonehero /clonehero .
+
 USER clonehero
-
-WORKDIR /usr/src/clonehero/config
-
 EXPOSE 14242/udp
-ENTRYPOINT ["../startup.sh"]
+ENTRYPOINT ["./startup.sh"]
