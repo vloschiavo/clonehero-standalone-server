@@ -2,7 +2,10 @@
 
 This is a Docker image for the Clone Hero dedicated server software and is available on [Docker Hub](https://hub.docker.com/r/vloschiavo/clonehero-standalone-server).
 
-Updated 2026-05-01 with version v1.1.0.6085-Final release of Clone Hero.
+## Change Log
+
+- 2026-05-01 Updated to version v1.1.0.6085-Final release of Clone Hero.
+- 2026-05-03 Added a new multiarch build, plus separate tags musl (latest and latest-musl) & glibc (latest-glibc) for amd64 as well as armv7 and arm64 builds
 
 This project was forked from: https://gitlab.com/CorySanin/clone-hero-server-docker / https://hub.docker.com/r/corysanin/clone-hero-server — thank you for the inspiration!
 

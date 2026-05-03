@@ -88,8 +88,9 @@ echo ""
 echo "=== Building linux-musl image (local only, no push) ==="
 
 MUSL_TAGS=(
-  "${IMAGE_NAME}:latest-musl"
-  "${IMAGE_NAME}:v${CLEAN_VERSION}-musl"
+  "${IMAGE_NAME}:latest"
+  "${IMAGE_NAME}:latest-alpine-amd64-musl"
+  "${IMAGE_NAME}:v${CLEAN_VERSION}-alpine-musl"
 )
 
 MUSL_TAG_ARGS=()

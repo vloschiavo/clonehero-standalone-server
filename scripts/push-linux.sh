@@ -12,43 +12,56 @@ fi
 : "${VERSION:?VERSION must be set in .env or environment}"
 : "${IMAGE_NAME:?IMAGE_NAME must be set in .env or environment}"
 
-ARCHES=(linux-x64 linux-arm linux-arm64)
 CLEAN_VERSION="${VERSION%-final}"
 
+# New tag arrays for specific architectures based on requested project labeling
+# Musl tags[cite: 5]
 MUSL_TAGS=(
-  "${IMAGE_NAME}:latest-musl"
-  "${IMAGE_NAME}:v${CLEAN_VERSION}-musl"
+  "${IMAGE_NAME}:latest"
+  "${IMAGE_NAME}:latest-alpine"
+  "${IMAGE_NAME}:latest-alpine-musl"
+  "${IMAGE_NAME}:latest-alpine-amd64-musl"
+  "${IMAGE_NAME}:v${CLEAN_VERSION}-alpine-musl"
 )
 
-MANIFEST_TAGS=(
-  "${IMAGE_NAME}:latest"
-  "${IMAGE_NAME}:v${CLEAN_VERSION}"
+# ARM64 tags[cite: 5]
+ARM64_TAGS=(
+  "${IMAGE_NAME}:latest-alpine-arm64"
+  "${IMAGE_NAME}:${CLEAN_VERSION}-alpine-arm64"
+)
+
+# ARMv7 tags[cite: 5]
+ARMV7_TAGS=(
+  "${IMAGE_NAME}:latest-alpine-armv7"
+  "${IMAGE_NAME}:${CLEAN_VERSION}-alpine-armv7"
+)
+
+# x86 (glibc) tags[cite: 5]
+X86_TAGS=(
+  "${IMAGE_NAME}:latest-alpine-x86"
+  "${IMAGE_NAME}:${CLEAN_VERSION}-alpine-x86"
 )
 
 # ---------------------------------------------------------------------------
-# Preflight: verify all expected local images exist before pushing anything
+# Preflight: verify local images exist before pushing[cite: 5]
 # ---------------------------------------------------------------------------
 
 echo "=== Preflight: checking local images ==="
 
 MISSING=()
 
-for ARCH in "${ARCHES[@]}"; do
-  TAG="${IMAGE_NAME}:${VERSION}-${ARCH}"
-  if ! docker image inspect "$TAG" &>/dev/null; then
-    MISSING+=("$TAG")
-  else
-    echo "  OK: $TAG"
-  fi
-done
+# Function to check tags in the local store
+check_tags() {
+  for TAG in "$@"; do
+    if ! docker image inspect "$TAG" &>/dev/null; then
+      MISSING+=("$TAG")
+    else
+      echo "  OK: $TAG"
+    fi
+  done
+}
 
-for TAG in "${MUSL_TAGS[@]}"; do
-  if ! docker image inspect "$TAG" &>/dev/null; then
-    MISSING+=("$TAG")
-  else
-    echo "  OK: $TAG"
-  fi
-done
+check_tags "${MUSL_TAGS[@]}" "${ARM64_TAGS[@]}" "${ARMV7_TAGS[@]}" "${X86_TAGS[@]}"
 
 if [[ ${#MISSING[@]} -gt 0 ]]; then
   echo ""
@@ -65,74 +78,48 @@ echo ""
 echo "All expected images found locally. Proceeding with push."
 
 # ---------------------------------------------------------------------------
-# Step 1: Push per-arch images
-# These must be on the registry before imagetools can assemble the manifest.
+# Step 1: Push Musl images[cite: 5]
 # ---------------------------------------------------------------------------
-
 echo ""
-echo "=== Pushing per-arch images ==="
-
-for ARCH in "${ARCHES[@]}"; do
-  TAG="${IMAGE_NAME}:${VERSION}-${ARCH}"
-  echo "  Pushing $TAG ..."
-  docker push "$TAG"
-done
-
-# ---------------------------------------------------------------------------
-# Step 2: Push musl images
-# ---------------------------------------------------------------------------
-
-echo ""
-echo "=== Pushing musl images ==="
-
+echo "=== Pushing Musl images ==="
 for TAG in "${MUSL_TAGS[@]}"; do
   echo "  Pushing $TAG ..."
   docker push "$TAG"
 done
 
 # ---------------------------------------------------------------------------
-# Step 3: Assemble and push the multi-arch manifest
-# imagetools create reads the per-arch manifests from the registry and
-# assembles them into a single multi-arch manifest list.
+# Step 2: Push ARM64 images[cite: 5]
 # ---------------------------------------------------------------------------
-
 echo ""
-echo "=== Creating and pushing multi-arch manifest ==="
-
-SOURCE_TAGS=()
-for ARCH in "${ARCHES[@]}"; do
-  SOURCE_TAGS+=("${IMAGE_NAME}:${VERSION}-${ARCH}")
-done
-
-for TAG in "${MANIFEST_TAGS[@]}"; do
-  echo "  Creating manifest: $TAG"
-  docker buildx imagetools create \
-    --tag "$TAG" \
-    "${SOURCE_TAGS[@]}"
-  echo "  Pushed: $TAG"
+echo "=== Pushing ARM64 images ==="
+for TAG in "${ARM64_TAGS[@]}"; do
+  echo "  Pushing $TAG ..."
+  docker push "$TAG"
 done
 
 # ---------------------------------------------------------------------------
-# Summary
+# Step 3: Push ARMv7 images[cite: 5]
 # ---------------------------------------------------------------------------
+echo ""
+echo "=== Pushing ARMv7 images ==="
+for TAG in "${ARMV7_TAGS[@]}"; do
+  echo "  Pushing $TAG ..."
+  docker push "$TAG"
+done
 
+# ---------------------------------------------------------------------------
+# Step 4: Push x86 images[cite: 5]
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Pushing x86 images ==="
+for TAG in "${X86_TAGS[@]}"; do
+  echo "  Pushing $TAG ..."
+  docker push "$TAG"
+done
+
+# ---------------------------------------------------------------------------
+# Summary[cite: 5]
+# ---------------------------------------------------------------------------
 echo ""
 echo "=== Push complete ==="
-echo ""
-echo "Multi-arch manifest (linux/amd64, linux/arm/v7, linux/arm64):"
-for TAG in "${MANIFEST_TAGS[@]}"; do
-  echo "  $TAG"
-done
-echo ""
-echo "Per-arch images:"
-for ARCH in "${ARCHES[@]}"; do
-  echo "  ${IMAGE_NAME}:${VERSION}-${ARCH}"
-done
-echo ""
-echo "Musl (linux/amd64, statically linked):"
-for TAG in "${MUSL_TAGS[@]}"; do
-  echo "  $TAG"
-done
-echo ""
-echo "Verify the manifest with:"
-echo "  docker buildx imagetools inspect ${IMAGE_NAME}:latest"
+echo "All images for musl, arm64, armv7, and x86 have been pushed with their new labels."
