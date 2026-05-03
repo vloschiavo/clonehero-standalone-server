@@ -5,16 +5,14 @@
 .DS_Store
 Thumbs.db
 
-<<<<<<< HEAD
 # Environment/local configuration files
 .env
 
 # Workflow/Tool specific directories (based on listing)
 .continue/
-=======
-# Workflow/Tool specific directories (based on listing)
-.continue/
 
 # binaries
 server-bins/
->>>>>>> multi-arch
+
+# temp files
+*.swp
