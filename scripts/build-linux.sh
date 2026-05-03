@@ -41,27 +41,30 @@ docker run --rm --privileged tonistiigi/binfmt --install all
 # ---------------------------------------------------------------------------
 # Build matrix
 # ---------------------------------------------------------------------------
-# Each entry: "ARCH|DOCKER_PLATFORM"
+# Ordered arrays are used instead of associative arrays to guarantee
+# iteration order and avoid bash associative array quirks.
+#
 # linux-musl is excluded from the multi-arch manifest (same platform as
 # linux-x64) and pushed separately with a -musl tag suffix.
 
-declare -A PLATFORM_MAP=(
-  [linux-x64]="linux/amd64"
-  [linux-arm]="linux/arm/v7"
-  [linux-arm64]="linux/arm64"
-)
+ARCHES=(linux-x64 linux-arm linux-arm64)
+PLATFORMS=(linux/amd64 linux/arm/v7 linux/arm64)
+
+# Strip "-final" suffix for clean semver tags e.g. v1.1.0.6085
+CLEAN_VERSION="${VERSION%-final}"
 
 # ---------------------------------------------------------------------------
 # Step 1: Build and push each Linux arch individually
 # These intermediate per-arch images are pushed so we can later assemble
-# them into a single manifest. They are tagged with an arch suffix.
+# them into a single manifest via imagetools. Tagged with an arch suffix.
 # ---------------------------------------------------------------------------
 
 echo ""
 echo "=== Building Linux arch images ==="
 
-for ARCH in "${!PLATFORM_MAP[@]}"; do
-  PLATFORM="${PLATFORM_MAP[$ARCH]}"
+for i in "${!ARCHES[@]}"; do
+  ARCH="${ARCHES[$i]}"
+  PLATFORM="${PLATFORMS[$i]}"
   TAG_ARCH="${IMAGE_NAME}:${VERSION}-${ARCH}"
 
   echo ""
@@ -78,39 +81,7 @@ for ARCH in "${!PLATFORM_MAP[@]}"; do
 done
 
 # ---------------------------------------------------------------------------
-# Step 2: Create and push the multi-arch manifest
-# Tags: latest and vVERSION (with the -final suffix stripped for cleanliness)
-# ---------------------------------------------------------------------------
-
-echo ""
-echo "=== Creating multi-arch manifest ==="
-
-# Strip "-final" suffix from version for clean semver tags e.g. 1.1.0.6085
-CLEAN_VERSION="${VERSION%-final}"
-
-MANIFEST_TAGS=(
-  "${IMAGE_NAME}:latest"
-  "${IMAGE_NAME}:v${CLEAN_VERSION}"
-)
-
-AMEND_ARGS=()
-for ARCH in "${!PLATFORM_MAP[@]}"; do
-  AMEND_ARGS+=(--amend "${IMAGE_NAME}:${VERSION}-${ARCH}")
-done
-
-for TAG in "${MANIFEST_TAGS[@]}"; do
-  echo "Creating manifest: $TAG"
-
-  # Remove existing manifest if it exists locally
-  docker manifest rm "$TAG" 2>/dev/null || true
-
-  docker manifest create "$TAG" "${AMEND_ARGS[@]}"
-  docker manifest push "$TAG"
-  echo "  Pushed: $TAG"
-done
-
-# ---------------------------------------------------------------------------
-# Step 3: Build and push linux-musl separately (same platform as linux-x64
+# Step 2: Build and push linux-musl separately (same platform as linux-x64
 # so it cannot be included in the multi-arch manifest)
 # ---------------------------------------------------------------------------
 
@@ -138,6 +109,35 @@ docker buildx build \
 
 echo ""
 for TAG in "${MUSL_TAGS[@]}"; do
+  echo "  Pushed: $TAG"
+done
+
+# ---------------------------------------------------------------------------
+# Step 3: Create and push the multi-arch manifest using imagetools.
+# imagetools works natively with buildx-pushed images, unlike the legacy
+# `docker manifest` command which cannot inspect buildx-pushed manifests.
+# Tags: latest and vVERSION
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "=== Creating multi-arch manifest ==="
+
+# Build the source list: all per-arch images pushed in Step 1
+SOURCE_TAGS=()
+for ARCH in "${ARCHES[@]}"; do
+  SOURCE_TAGS+=("${IMAGE_NAME}:${VERSION}-${ARCH}")
+done
+
+MANIFEST_TAGS=(
+  "${IMAGE_NAME}:latest"
+  "${IMAGE_NAME}:v${CLEAN_VERSION}"
+)
+
+for TAG in "${MANIFEST_TAGS[@]}"; do
+  echo "Creating manifest: $TAG"
+  docker buildx imagetools create \
+    --tag "$TAG" \
+    "${SOURCE_TAGS[@]}"
   echo "  Pushed: $TAG"
 done
 
