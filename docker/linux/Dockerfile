@@ -10,8 +10,13 @@ ARG ARCH
 
 # linux-musl is statically linked against musl — no compat layer needed.
 # linux-x64, linux-arm, linux-arm64 are glibc-linked — install gcompat + libc6-compat.
+# bash is required by startup.sh (uses [[ ]] and array syntax).
+# dos2unix is installed to sanitize startup.sh line endings (CRLF -> LF)
+# regardless of the host OS that built the repo, then removed to keep the image lean.
 RUN if [ "$ARCH" != "linux-musl" ]; then \
-      apk add --no-cache gcompat libc6-compat; \
+      apk add --no-cache bash gcompat libc6-compat dos2unix; \
+    else \
+      apk add --no-cache bash dos2unix; \
     fi
 
 WORKDIR /usr/src/clonehero
@@ -23,7 +28,10 @@ COPY server-bins/${ARCH}/Server ./Server
 COPY startup.sh ./startup.sh
 COPY settings.ini ./settings.ini
 
-RUN chmod +x ./Server ./startup.sh
+# Sanitize line endings, set permissions, then remove dos2unix
+RUN dos2unix ./startup.sh \
+    && apk del dos2unix \
+    && chmod +x ./Server ./startup.sh
 
 # Create cache directory
 RUN mkdir -p /tmp/CloneHeroServer

@@ -7,3 +7,6 @@ Thumbs.db
 
 # Workflow/Tool specific directories (based on listing)
 .continue/
+
+# binaries
+server-bins/
