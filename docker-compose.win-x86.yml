@@ -1,0 +1,33 @@
+services:
+  clone-hero-server-win-x86:
+    image: vloschiavo/clonehero-standalone-server:win-x86
+    container_name: clone-hero-server-win-x86
+    restart: unless-stopped
+
+    # Server Options
+    environment:
+      - CH_NAME=My Clone Hero Server       # Specify server name
+      - CH_PORT=14242                      # Specify single server port
+      - CH_ADDRESS=0.0.0.0                 # Specify server binding address
+      - CH_LOG_LEVEL=4                     # Set max logging level. default 4, range: 0-4
+      - CH_PASSWORD=                       # Specify server password or leave CH_PASSWORD= blank and set CH_NO_PASS=true
+      - CH_NO_PASS=true                    # Don't set a Server Password
+      - CH_ALLOW_RESET=true                # When the server becomes empty, game values are set to default
+      - CH_USE_DEFAULTS=false              # Skip address and port setup and startup a server with default settings
+      - CH_INSTANCE_COUNT=1                # Specify max server instance count
+      - CH_PORTRANGE=14242-14251           # Specify multi server port range
+
+    ports:
+      - "14242:14242/udp"
+      #- "14242-14251:14242-14251/udp"     # Uncomment for multiple instances
+
+    volumes:
+      - ./settings.ini:C:\clonehero\settings.ini
+      - ./cache:C:\tmp\CloneHeroServer     # Persistent cache of users' song lists
+
+    # Optional: Give the container more resources if you expect many players or are launching multiple instances
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
