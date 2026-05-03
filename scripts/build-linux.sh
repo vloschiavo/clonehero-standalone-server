@@ -41,11 +41,13 @@ docker run --rm --privileged tonistiigi/binfmt --install all
 # ---------------------------------------------------------------------------
 # Build matrix
 # ---------------------------------------------------------------------------
-# Ordered arrays are used instead of associative arrays to guarantee
-# iteration order and avoid bash associative array quirks.
+# Ordered arrays guarantee iteration order.
+# Each arch is built one at a time with --load so the image lands in the
+# local Docker image store for testing. --load only works for single-platform
+# builds, which is why we loop instead of passing all platforms at once.
 #
-# linux-musl is excluded from the multi-arch manifest (same platform as
-# linux-x64) and pushed separately with a -musl tag suffix.
+# linux-musl shares linux/amd64 with linux-x64 so it is built and tagged
+# separately and excluded from the multi-arch manifest.
 
 ARCHES=(linux-x64 linux-arm linux-arm64)
 PLATFORMS=(linux/amd64 linux/arm/v7 linux/arm64)
@@ -54,13 +56,11 @@ PLATFORMS=(linux/amd64 linux/arm/v7 linux/arm64)
 CLEAN_VERSION="${VERSION%-final}"
 
 # ---------------------------------------------------------------------------
-# Step 1: Build and push each Linux arch individually
-# These intermediate per-arch images are pushed so we can later assemble
-# them into a single manifest via imagetools. Tagged with an arch suffix.
+# Step 1: Build each Linux arch image locally
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Building Linux arch images ==="
+echo "=== Building Linux arch images (local only, no push) ==="
 
 for i in "${!ARCHES[@]}"; do
   ARCH="${ARCHES[$i]}"
@@ -76,17 +76,16 @@ for i in "${!ARCHES[@]}"; do
     --build-arg ARCH="$ARCH" \
     --file "$ROOT_DIR/docker/linux/Dockerfile" \
     --tag "$TAG_ARCH" \
-    --push \
+    --load \
     "$ROOT_DIR"
 done
 
 # ---------------------------------------------------------------------------
-# Step 2: Build and push linux-musl separately (same platform as linux-x64
-# so it cannot be included in the multi-arch manifest)
+# Step 2: Build linux-musl locally
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Building linux-musl image ==="
+echo "=== Building linux-musl image (local only, no push) ==="
 
 MUSL_TAGS=(
   "${IMAGE_NAME}:latest-musl"
@@ -104,56 +103,32 @@ docker buildx build \
   --build-arg ARCH="linux-musl" \
   --file "$ROOT_DIR/docker/linux/Dockerfile" \
   "${MUSL_TAG_ARGS[@]}" \
-  --push \
+  --load \
   "$ROOT_DIR"
-
-echo ""
-for TAG in "${MUSL_TAGS[@]}"; do
-  echo "  Pushed: $TAG"
-done
-
-# ---------------------------------------------------------------------------
-# Step 3: Create and push the multi-arch manifest using imagetools.
-# imagetools works natively with buildx-pushed images, unlike the legacy
-# `docker manifest` command which cannot inspect buildx-pushed manifests.
-# Tags: latest and vVERSION
-# ---------------------------------------------------------------------------
-
-echo ""
-echo "=== Creating multi-arch manifest ==="
-
-# Build the source list: all per-arch images pushed in Step 1
-SOURCE_TAGS=()
-for ARCH in "${ARCHES[@]}"; do
-  SOURCE_TAGS+=("${IMAGE_NAME}:${VERSION}-${ARCH}")
-done
-
-MANIFEST_TAGS=(
-  "${IMAGE_NAME}:latest"
-  "${IMAGE_NAME}:v${CLEAN_VERSION}"
-)
-
-for TAG in "${MANIFEST_TAGS[@]}"; do
-  echo "Creating manifest: $TAG"
-  docker buildx imagetools create \
-    --tag "$TAG" \
-    "${SOURCE_TAGS[@]}"
-  echo "  Pushed: $TAG"
-done
 
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Linux build complete ==="
+echo "=== Linux build complete (local) ==="
 echo ""
-echo "Multi-arch manifest (linux/amd64, linux/arm/v7, linux/arm64):"
-for TAG in "${MANIFEST_TAGS[@]}"; do
-  echo "  $TAG"
+echo "Per-arch images loaded into local Docker image store:"
+for ARCH in "${ARCHES[@]}"; do
+  echo "  ${IMAGE_NAME}:${VERSION}-${ARCH}"
 done
 echo ""
-echo "Musl (linux/amd64, statically linked):"
+echo "Musl images:"
 for TAG in "${MUSL_TAGS[@]}"; do
   echo "  $TAG"
 done
+echo ""
+echo "To test locally:"
+echo "  docker run --rm -p 14242:14242/udp ${IMAGE_NAME}:${VERSION}-linux-x64"
+echo "  docker run --rm -p 14242:14242/udp ${IMAGE_NAME}:latest-musl"
+echo ""
+echo "To test a non-native arch (requires QEMU):"
+echo "  docker run --rm --platform linux/arm64 -p 14242:14242/udp ${IMAGE_NAME}:${VERSION}-linux-arm64"
+echo ""
+echo "When ready to publish, run:"
+echo "  bash scripts/push-linux.sh"
