@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Clone Hero Standalone Server 🎸 🥁 
 
 This is Docker image for a Clone Hero dedicated server software and is available on [Docker Hub](https://hub.docker.com/r/vloschiavo/clonehero-standalone-server)
@@ -10,15 +9,18 @@ This was project was forked from: https://gitlab.com/CorySanin/clone-hero-server
 ---
 Installation:
 1. Clone this repo:
+
 ```bash
 git clone https://github.com/vloschiavo/clonehero-standalone-server.git
 
 cd ./clonehero-standalone-server
 ```
+
 2. Edit the docker compose and settings.ini files to your taste.
 
 docker-compose.yml
 =======
+
 # Clone Hero Standalone Server 🎸 🥁
 
 This is a Docker image for the Clone Hero dedicated server software and is available on [Docker Hub](https://hub.docker.com/r/vloschiavo/clonehero-standalone-server).
@@ -58,7 +60,7 @@ docker compose up -d
 Edit `docker-compose.yml` and `settings.ini` before launching.
 
 **docker-compose.yml**
->>>>>>> multi-arch
+
 ```yml
 services:
   clone-hero-server:
@@ -67,16 +69,13 @@ services:
     restart: unless-stopped
     user: "1000:1000"
 
-<<<<<<< HEAD
     # Server Options
 =======
->>>>>>> multi-arch
     environment:
       - CH_NAME=My Clone Hero Server       # Specify server name
       - CH_PORT=14242                      # Specify single server port
       - CH_ADDRESS=0.0.0.0                 # Specify server binding address
       - CH_LOG_LEVEL=4                     # Set max logging level. default 4, range: 0-4
-<<<<<<< HEAD
       - CH_PASSWORD=                       # Specify server password or leave CH_PASSWORD= blank and set CH_NO_PASS=true
       - CH_NO_PASS=true                    # Don't set a Server Password
       - CH_ALLOW_RESET=true                # When the server becomes empty, game values are set to default
@@ -108,7 +107,6 @@ services:
       - ./settings.ini:/usr/src/clonehero/settings.ini
       - ./cache:/tmp/CloneHeroServer       # Persistent cache of users' song lists
 
->>>>>>> multi-arch
     deploy:
       resources:
         limits:
@@ -116,11 +114,9 @@ services:
           memory: 256M
 ```
 
-<<<<<<< HEAD
 settings.ini
 =======
 **settings.ini**
->>>>>>> multi-arch
 ```ini
 [online]
 defaultgamemode = quickplay
@@ -137,7 +133,6 @@ songsperclient = 1
 [redis]
 redis_enable = 0
 redis_db_id = 0
-<<<<<<< HEAD
 redis_password = 
 redis_hostname = localhost
 ```
@@ -145,8 +140,6 @@ redis_hostname = localhost
 ```bash
 docker compose up -d
 =======
-redis_password =
-redis_hostname = localhost
 ```
 
 ### Using the musl image (linux/amd64 only)
@@ -157,12 +150,10 @@ docker run -d \
   -e CH_NAME="My Server" \
   -e CH_NO_PASS=true \
   vloschiavo/clonehero-standalone-server:latest-musl
->>>>>>> multi-arch
 ```
 
 ---
 
-<<<<<<< HEAD
 ### Notes:
 
 #### Multiple Servers
@@ -267,4 +258,3 @@ IMAGE_NAME=vloschiavo/clonehero-standalone-server
 
 Get Clone Hero clients here: https://clonehero.net/
 GitHub releases here: https://github.com/clonehero-game/releases
->>>>>>> multi-arch
