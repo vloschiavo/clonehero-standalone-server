@@ -8,15 +8,18 @@ FROM alpine:latest
 
 ARG ARCH
 
-# linux-musl is statically linked against musl — no compat layer needed.
-# linux-x64, linux-arm, linux-arm64 are glibc-linked — install gcompat + libc6-compat.
-# bash is required by startup.sh (uses [[ ]] and array syntax).
-# dos2unix is installed to sanitize startup.sh line endings (CRLF -> LF)
-# regardless of the host OS that built the repo, then removed to keep the image lean.
+# All targets require bash, libgcc, and libstdc++.
+# The linux-musl binary was expected to be fully statically linked but still
+# depends on libgcc_s.so.1 and libstdc++.so.6 at runtime.
+# linux-x64, linux-arm, linux-arm64 additionally need gcompat and libc6-compat
+# for glibc compatibility on Alpine's musl-based userspace.
 RUN if [ "$ARCH" != "linux-musl" ]; then \
-      apk add --no-cache bash gcompat libc6-compat dos2unix; \
+      apk add --no-cache bash gcompat libc6-compat libgcc libstdc++; \
+      if [ "$ARCH" = "linux-arm" ]; then \
+        ln -sf /lib/ld-musl-armhf.so.1 /lib/ld-linux-armhf.so.3; \
+      fi; \
     else \
-      apk add --no-cache bash dos2unix; \
+      apk add --no-cache bash libgcc libstdc++; \
     fi
 
 WORKDIR /usr/src/clonehero
@@ -28,13 +31,12 @@ COPY server-bins/${ARCH}/Server ./Server
 COPY startup.sh ./startup.sh
 COPY settings.ini ./settings.ini
 
-# Sanitize line endings, set permissions, then remove dos2unix
-RUN dos2unix ./startup.sh \
-    && apk del dos2unix \
-    && chmod +x ./Server ./startup.sh
-
-# Create cache directory
-RUN mkdir -p /tmp/CloneHeroServer
+# Create directories and set ownership before dropping to non-root user:
+#   /tmp/CloneHeroServer       — persistent song hash cache (can be bind-mounted)
+#   /tmp/dotnet-bundle-extract — .NET single-file bundle extraction directory
+RUN chmod +x ./Server ./startup.sh \
+    && mkdir -p /tmp/CloneHeroServer /tmp/dotnet-bundle-extract \
+    && chown -R 1000:1000 /usr/src/clonehero /tmp/CloneHeroServer /tmp/dotnet-bundle-extract
 
 # Run as non-root user
 USER 1000:1000
@@ -49,7 +51,8 @@ ENV CH_NAME="My Clone Hero Server" \
     CH_ALLOW_RESET=true \
     CH_USE_DEFAULTS=false \
     CH_INSTANCE_COUNT=1 \
-    CH_PORTRANGE=14242-14251
+    CH_PORTRANGE=14242-14251 \
+    DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp/dotnet-bundle-extract
 
 EXPOSE 14242/udp
 
