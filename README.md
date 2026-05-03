@@ -10,30 +10,16 @@ This project was forked from: https://gitlab.com/CorySanin/clone-hero-server-doc
 
 ## Supported Architectures & Tags
 
-### Linux (multi-arch manifest)
-
 A single `docker pull` automatically selects the correct image for your architecture.
 
 | Tag | Architectures | Notes |
 |---|---|---|
-| `latest`, `v1.1.0.6085` | linux/amd64, linux/arm/v7, linux/arm64 | glibc-linked, Alpine base |
-| `latest-musl`, `v1.1.0.6085-musl` | linux/amd64 | Statically linked musl binary, Alpine base |
-
-### Windows (explicit tags)
-
-Windows containers must be pulled explicitly by tag and require a Docker host running in **Windows containers mode**.
-
-| Tag | Architecture | Base Image | Notes |
-|---|---|---|---|
-| `win-x64`, `v1.1.0.6085-win-x64` | windows/amd64 | Windows Server Core ltsc2022 | |
-| `win-x86`, `v1.1.0.6085-win-x86` | windows/amd64 | Windows Server Core ltsc2022 | Runs via WoW64 |
-| `win-arm64` | windows/arm64 | — | ⚠️ Not available — see note below |
-
-> **win-arm64 note:** Windows arm64 container builds require a native arm64 Windows host to build and test reliably. This target is currently out of scope. If you have access to Windows arm64 hardware and would like to contribute, please open a pull request.
+| `latest`, `v1.1.0.6085` | linux/amd64, linux/arm/v7, linux/arm64 | Alpine base |
+| `latest-musl`, `v1.1.0.6085-musl` | linux/amd64 | musl binary, Alpine base |
 
 ---
 
-## Linux Installation
+## Installation
 
 ### Quick start
 
@@ -103,45 +89,14 @@ redis_password =
 redis_hostname = localhost
 ```
 
-### Using the musl image (Alpine, linux/amd64 only)
+### Using the musl image (linux/amd64 only)
 
-Docker Run:
 ```bash
 docker run -d \
   -p 14242:14242/udp \
   -e CH_NAME="My Server" \
   -e CH_NO_PASS=true \
   vloschiavo/clonehero-standalone-server:latest-musl
-```
-
----
-
-## Windows Installation
-
-Windows containers require Docker Desktop (or Docker Engine) running in **Windows containers mode**.
-
-> To switch modes in Docker Desktop: right-click the system tray icon → **Switch to Windows containers**.
-
-### Quick start (win-x64)
-
-```powershell
-docker compose -f docker-compose.win-x64.yml up -d
-```
-
-### Quick start (win-x86)
-
-```powershell
-docker compose -f docker-compose.win-x86.yml up -d
-```
-
-### Configuration
-
-Edit the appropriate `docker-compose.win-*.yml` file. The environment variables and settings are identical to the Linux version. Volume paths use Windows-style paths:
-
-```yml
-volumes:
-  - ./settings.ini:C:\clonehero\settings.ini
-  - ./cache:C:\tmp\CloneHeroServer
 ```
 
 ---
@@ -169,8 +124,7 @@ Mounting a cache directory speeds up client connections between container restar
 
 ```yaml
 volumes:
-  - ./cache:/tmp/CloneHeroServer        # Linux
-  - ./cache:C:\tmp\CloneHeroServer      # Windows
+  - ./cache:/tmp/CloneHeroServer
 ```
 
 - Comment out the volume mount for an ephemeral cache (destroyed on container restart)
@@ -180,31 +134,23 @@ volumes:
 
 ## Building From Source
 
-### Prerequisites (Linux builds — Ubuntu x86-64)
+### Prerequisites
 
+- Ubuntu x86-64
 - Docker with `buildx` plugin
 - QEMU binfmt handlers (installed automatically by `build-linux.sh`)
 - `curl`, `unzip`
 
-### Prerequisites (Windows builds)
-
-- A Windows 11 (or Windows Server) machine or VM with Docker Desktop in **Windows containers mode**
-- The VM must be reachable from your build machine via TCP (configure `WINDOWS_DOCKER_HOST`)
-
-### Build Linux images
+### Build images locally
 
 ```bash
-# Optionally set these in .env or export them
-export WINDOWS_DOCKER_HOST=tcp://x.x.x.x:2376
-
 bash scripts/build-linux.sh
 ```
 
-### Build Windows images
+### Push to Docker Hub
 
 ```bash
-export WINDOWS_DOCKER_HOST=tcp://x.x.x.x:2376
-bash scripts/build-windows.sh
+bash scripts/push-linux.sh
 ```
 
 ### Fetch server binaries only
