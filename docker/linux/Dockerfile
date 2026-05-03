@@ -14,9 +14,11 @@ ARG ARCH
 # linux-x64, linux-arm, linux-arm64 additionally need gcompat and libc6-compat
 # for glibc compatibility on Alpine's musl-based userspace.
 RUN if [ "$ARCH" != "linux-musl" ]; then \
-      apk add --no-cache bash gcompat libc6-compat libgcc libstdc++; \
+      # Added libintl and explicitly listed gcompat/libc6-compat
+      apk add --no-cache bash gcompat libc6-compat libgcc libstdc++ libintl; \
       if [ "$ARCH" = "linux-arm" ]; then \
         ln -sf /lib/ld-musl-armhf.so.1 /lib/ld-linux-armhf.so.3; \
+        apk add --no-cache libssl3; \
       fi; \
     else \
       apk add --no-cache bash libgcc libstdc++; \
@@ -42,7 +44,9 @@ RUN chmod +x ./Server ./startup.sh \
 USER 1000:1000
 
 # Default environment variables — override via docker-compose or docker run -e
-ENV CH_NAME="My Clone Hero Server" \
+ENV LD_PRELOAD="/lib/libgcompat.so.0" \
+    DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp/dotnet-bundle-extract \
+    CH_NAME="My Clone Hero Server" \
     CH_PORT=14242 \
     CH_ADDRESS=0.0.0.0 \
     CH_LOG_LEVEL=4 \
@@ -51,8 +55,7 @@ ENV CH_NAME="My Clone Hero Server" \
     CH_ALLOW_RESET=true \
     CH_USE_DEFAULTS=false \
     CH_INSTANCE_COUNT=1 \
-    CH_PORTRANGE=14242-14251 \
-    DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp/dotnet-bundle-extract
+    CH_PORTRANGE=14242-14251
 
 EXPOSE 14242/udp
 
