@@ -4,8 +4,8 @@ services:
       context: .
       tags:
         - clonehero-standalone-server:latest
-        - clonehero-standalone-server:1.1.0.6085
-    image: vloschiavo/clonehero-standalone-server
+        - clonehero-standalone-server:1.1.0.6135
+    image: vloschiavo/clonehero-standalone-server:latest
     container_name: clone-hero-server
     restart: unless-stopped
     user: "1000:1000"

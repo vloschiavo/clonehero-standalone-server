@@ -2,7 +2,7 @@
 
 This is Docker image for a Clone Hero dedicated server software and is available on [Docker Hub](https://hub.docker.com/r/vloschiavo/clonehero-standalone-server)
 
-Updated 2026-05-01 with version v1.1.0.6085-Final release of Clone Hero.
+Updated 2026-06-01 with version v1.1.0.6135-Final release of Clone Hero.
 
 This was project was forked from: https://gitlab.com/CorySanin/clone-hero-server-docker / https://hub.docker.com/r/corysanin/clone-hero-server.  Thank you for the inspiration!
 
@@ -29,6 +29,7 @@ This is a Docker image for the Clone Hero dedicated server software and is avail
 
 - 2026-05-01 Updated to version v1.1.0.6085-Final release of Clone Hero.
 - 2026-05-03 Added a new multiarch build, plus separate tags musl (latest and latest-musl) & glibc (latest-glibc) for amd64 as well as armv7 and arm64 builds
+- 2026-06-01 Updated to version v1.1.0.6135-Final
 
 This project was forked from: https://gitlab.com/CorySanin/clone-hero-server-docker / https://hub.docker.com/r/corysanin/clone-hero-server — thank you for the inspiration!
 
@@ -40,8 +41,8 @@ A single `docker pull` automatically selects the correct image for your architec
 
 | Tag | Architectures | Notes |
 |---|---|---|
-| `latest`, `v1.1.0.6085` | linux/amd64, linux/arm/v7, linux/arm64 | Alpine base |
-| `latest-musl`, `v1.1.0.6085-musl` | linux/amd64 | musl binary, Alpine base |
+| `latest`, `v1.1.0.6135` | linux/amd64, linux/arm/v7, linux/arm64 | Alpine base |
+| `latest-musl`, `v1.1.0.6135-musl` | linux/amd64 | musl binary, Alpine base |
 
 ---
 
@@ -249,8 +250,8 @@ Binaries are extracted to `./server-bins/` and gitignored. Re-running is a no-op
 ### .env reference
 
 ```ini
-VERSION=1.1.0.6085-final
-ZIP_URL=https://github.com/clonehero-game/releases/releases/download/v1.1.0.6085-final/CloneHero-StandaloneServer.zip
+VERSION=1.1.0.6135-final
+ZIP_URL=https://github.com/clonehero-game/releases/releases/download/v1.1.0.6135-final/CloneHero-StandaloneServer.zip
 IMAGE_NAME=vloschiavo/clonehero-standalone-server
 ```
 
