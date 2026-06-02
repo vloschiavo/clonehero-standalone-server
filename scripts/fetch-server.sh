@@ -36,7 +36,7 @@ unzip -q "$ZIP_FILE" -d "$BINS_DIR"
 
 # The zip extracts into a subdirectory CloneHero-StandaloneServer/
 # Move contents up one level
-EXTRACTED_DIR="$BINS_DIR/CloneHero-StandaloneServer"
+EXTRACTED_DIR="$BINS_DIR/build"
 if [[ -d "$EXTRACTED_DIR" ]]; then
   mv "$EXTRACTED_DIR"/* "$BINS_DIR/"
   rmdir "$EXTRACTED_DIR"

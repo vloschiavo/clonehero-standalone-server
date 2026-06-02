@@ -2,7 +2,7 @@
 
 This is Docker image for a Clone Hero dedicated server software and is available on [Docker Hub](https://hub.docker.com/r/vloschiavo/clonehero-standalone-server)
 
-Updated 2026-06-01 with version v1.1.0.6135-Final release of Clone Hero.
+Updated 2026-06-01 with version v1.1.0.6142-Final release of Clone Hero.
 
 This was project was forked from: https://gitlab.com/CorySanin/clone-hero-server-docker / https://hub.docker.com/r/corysanin/clone-hero-server.  Thank you for the inspiration!
 
@@ -30,6 +30,7 @@ This is a Docker image for the Clone Hero dedicated server software and is avail
 - 2026-05-01 Updated to version v1.1.0.6085-Final release of Clone Hero.
 - 2026-05-03 Added a new multiarch build, plus separate tags musl (latest and latest-musl) & glibc (latest-glibc) for amd64 as well as armv7 and arm64 builds
 - 2026-06-01 Updated to version v1.1.0.6135-Final
+- 2026-06-01 Updated to version v1.1.0.6142-Final
 
 This project was forked from: https://gitlab.com/CorySanin/clone-hero-server-docker / https://hub.docker.com/r/corysanin/clone-hero-server — thank you for the inspiration!
 
@@ -67,7 +68,7 @@ services:
   clone-hero-server:
     image: vloschiavo/clonehero-standalone-server
     container_name: clone-hero-server
-    restart: unless-stopped
+    restart: unless-stopped1.1.0.6142
     user: "1000:1000"
 
     # Server Options
@@ -88,7 +89,7 @@ services:
     ports:
       - "14242:14242/udp"                  # Single port for a single server
 
-    volumes:
+    volumes:1.1.0.6142
       - ./settings.ini:/usr/src/clonehero/settings.ini
       - ./cache:/tmp/CloneHeroServer       # Used for persistent cache of your users' song lists; speeds up subsequent connections between container restarts
     
@@ -171,7 +172,7 @@ docker run -d \
     # - "14242:14242/udp"             # comment out or remove this line
     - "14242-14251:14242-14251/udp"   # add this line for 10 server ports
     ```
-
+1.1.0.6142
 #### Song Cache
 - To speed up subsequent connections to your server between restarts, enable the cache as shown in the docker-yaml
   - This maps your ./cache directory to /tmp/CloneHeroServer in the container where the Clone Hero Server stores the song hash cache for each user.  
@@ -251,7 +252,7 @@ Binaries are extracted to `./server-bins/` and gitignored. Re-running is a no-op
 
 ```ini
 VERSION=1.1.0.6135-final
-ZIP_URL=https://github.com/clonehero-game/releases/releases/download/v1.1.0.6135-final/CloneHero-StandaloneServer.zip
+ZIP_URL=https://github.com/clonehero-game/releases/releases/download/v1.1.0.6142-final/CloneHero-StandaloneServer.zip
 IMAGE_NAME=vloschiavo/clonehero-standalone-server
 ```
 
