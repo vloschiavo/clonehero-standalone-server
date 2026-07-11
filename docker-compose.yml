@@ -38,3 +38,10 @@ services:
         limits:
           cpus: '1.0'
           memory: 256M
+
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f Server || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 15s
